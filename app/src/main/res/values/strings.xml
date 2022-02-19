@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">گفتار به متن</string>
+    <string name="recognize_microphone">شناسایی میکروفون</string>
+    <string name="stop_microphone">توقف میکروفون</string>
+    <string name="preparing">درحال آماده سازی شناساگر…\n</string>
+    <string name="ready">آماده\n</string>
+    <string name="failed">شناسایی ناموفق بود %s\n</string>
+    <string name="elapsed">نتیجه %s سپری شده %d میلی ثانیه\n</string>
+    <string name="starting">درحال شروع\n</string>
+    <string name="say_something">جمله خود را بگویید\n</string>
+    <string name="pause">ایست</string>
+    <string name="continueRecognition">ادامه</string>
+</resources>
