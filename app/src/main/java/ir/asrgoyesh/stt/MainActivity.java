@@ -41,7 +41,6 @@ public class MainActivity extends AppCompatActivity implements
 
     private Model model;
     private SpeechService speechService;
-    private SpeechStreamService speechStreamService;
     private TextView resultView;
     private Button mic;
     private ToggleButton pause;
@@ -105,44 +104,37 @@ public class MainActivity extends AppCompatActivity implements
             speechService.stop();
             speechService.shutdown();
         }
-
-        if (speechStreamService != null) {
-            speechStreamService.stop();
-        }
     }
 
 
     @Override
     public void onResult(String hypothesis) {
-        //resultView.append(hypothesis + "\n");
-        try {
+        resultView.append(hypothesis + "\n");
+        /*try {
             JSONObject songs = new JSONObject(hypothesis);
             resultView.append(songs + "\n");
         }catch (JSONException e) {
             System.out.println(e.getMessage());
-        }
+        }*/
     }
 
     @Override
     public void onFinalResult(String hypothesis) {
-        resultView.append(hypothesis + "\n");
+        //resultView.append(hypothesis + "\n");
         setUiState(STATE_DONE);
-        if (speechStreamService != null) {
-            speechStreamService = null;
-        }
     }
 
     @Override
     public void onPartialResult(String hypothesis) {
         //resultView.append(hypothesis + "\n");
-        try {
+        /*try {
             JSONObject songs= new JSONObject(hypothesis);
 
             resultView.append(songs + "\n");
 
         }catch (JSONException e) {
             System.out.println(e.getMessage());
-        }
+        }*/
     }
 
     @Override
@@ -202,7 +194,7 @@ public class MainActivity extends AppCompatActivity implements
             try {
                 Recognizer rec = new Recognizer(model, 16000.0f);
                 speechService = new SpeechService(rec, 16000.0f);
-                speechService.startListening(this,10000);
+                speechService.startListening(this);
             } catch (IOException e) {
                 setErrorState(e.getMessage());
             }
