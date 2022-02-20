@@ -13,15 +13,15 @@ public class Word {
         if (this.score>80){
             this.color="#209c05";
         }else if (this.score>60){
-            this.color="#85e62c";
+            this.color="#98DE00";
         }
         else if (this.score>40){
-            this.color="#ffff00";
+            this.color="#FDD20E";
         }
         else if (this.score>20){
-            this.color="#ffca3a";
+            this.color="#FFA300";
         }else{
-            this.color="#ff2128";
+            this.color="#E10600";
         }
 
 
