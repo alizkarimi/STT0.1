@@ -8,13 +8,14 @@ import androidx.core.content.ContextCompat;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.text.Html;
 import android.text.method.ScrollingMovementMethod;
-import android.util.JsonReader;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
-import org.json.JSONException;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.vosk.LibVosk;
 import org.vosk.LogLevel;
@@ -22,11 +23,10 @@ import org.vosk.Model;
 import org.vosk.Recognizer;
 import org.vosk.android.RecognitionListener;
 import org.vosk.android.SpeechService;
-import org.vosk.android.SpeechStreamService;
 import org.vosk.android.StorageService;
 
 import java.io.IOException;
-import java.io.StringReader;
+import java.util.LinkedList;
 
 public class MainActivity extends AppCompatActivity implements
         RecognitionListener {
@@ -109,7 +109,22 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onResult(String hypothesis) {
-        resultView.append(hypothesis + "\n");
+        LinkedList<Word> sentense = new LinkedList<>();
+        try {
+
+            JSONObject obj = new JSONObject(hypothesis);
+            JSONArray jsonArray = obj.getJSONArray("result");
+            for (int i=0;i<jsonArray.length();i++) {
+                sentense.add(new Word(jsonArray.getJSONObject(i).getDouble("conf"),jsonArray.getJSONObject(i).getString("word")));
+            }
+
+
+        } catch (Throwable t) {
+            Log.e("My App", "Could not parse malformed JSON: \"" + hypothesis + "\"");
+        }
+        for (int i=0;i<sentense.size();i++)
+        resultView.append(Html.fromHtml(sentense.get(i).toString()));
+        resultView.append("\n");
         /*try {
             JSONObject songs = new JSONObject(hypothesis);
             resultView.append(songs + "\n");
@@ -192,8 +207,8 @@ public class MainActivity extends AppCompatActivity implements
         } else {
             setUiState(STATE_MIC);
             try {
-                Recognizer rec = new Recognizer(model, 16000.0f);
-                speechService = new SpeechService(rec, 16000.0f);
+                Recognizer rec = new Recognizer(model, 24000.0f);
+                speechService = new SpeechService(rec, 24000.0f);
                 speechService.startListening(this);
             } catch (IOException e) {
                 setErrorState(e.getMessage());
