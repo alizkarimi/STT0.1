@@ -11,11 +11,14 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.Handler;
+import android.os.SystemClock;
 import android.text.Html;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -37,6 +40,44 @@ import java.util.Locale;
 public class MainActivity extends AppCompatActivity implements
         RecognitionListener {
 
+
+    Quiz[] Q={new Quiz(1,"سلام کنجی!","Hello Kenji!"),
+            new Quiz(2,"سلام جان.","Hi John."),
+            new Quiz(3,"سلام به همگی.","Hello everybody."),
+            new Quiz(4,"سلام بچه ها."	,"Hi guys."),
+            new Quiz(5,"سلام آقا.","Hello sir."),
+            new Quiz(6,"سلام خانم.","Hello madam."),
+            new Quiz(7,"سلام آقای براون.","Hello Mr. Brown."),
+            new Quiz(8,"صبح بخیر خانم اسمیت.","Good morning Mrs. Smith."),
+            new Quiz(9,"بعدازظهربخیر دوشیزه جونز.","Good afternoon Miss Jones."),
+            new Quiz(10,"عصربخیر.","Good evening."),
+            new Quiz(11,"حالت چطوره؟","How are you?"),
+            new Quiz(12,"مادرت چطوره؟","How is your mother?"),
+            new Quiz(13,"پدرت چطوره؟","How is your father?"),
+            new Quiz(14,"خواهرت چطوره؟","How is your sister?"),
+            new Quiz(15,"برادرت چطوره؟","How is your brother?"),
+            new Quiz(16,"والدینت چطورن؟","How are your parents?"),
+            new Quiz(17,"زنت چطوره؟","How is your wife?"),
+            new Quiz(18,"شوهرت چطوره؟","How is your husband?"),
+            new Quiz(19,"همسرت چطوره؟","How is your spouse?"),
+            new Quiz(20,"نامزدت چطوره؟","How is your fiance?"),
+            new Quiz(21,"بچت چطوره؟","How is your child?"),
+            new Quiz(22,"بچه هات چطورن؟","How are your children?"),
+            new Quiz(23,"پسرت چطوره؟","How is your son?"),
+            new Quiz(24,"دخترت چطوره؟","How is your daughter?"),
+            new Quiz(25,"مادبزرگت چطوره؟","How is your grand mother?"),
+            new Quiz(26,"پدربزرگت چطوره؟","How is your grand father?"),
+            new Quiz(27,"نوه ات چطوره؟","How is your grand child?"),
+            new Quiz(28,"نوه ات چطوره؟(پسر)","How is your grand son?"),
+            new Quiz(29,"نوه ات چطوره؟(دختر)","How is your grand daughter?"),
+            new Quiz(30,"نوه هات چطورن؟","How are your grand children?"),
+            new Quiz(31,"عموت/داییت چطوره؟","How is your uncle?"),
+            new Quiz(32,"خاله ات/عمه ات چطوره؟","How is your aunt?"),
+            new Quiz(33,"پسر دایی ات/دختردایی ات/پسر خاله ات چطوره؟"," How  is  your cousin?")
+    };
+
+    boolean isFirst=true;
+
     static private final int STATE_START = 0;
     static private final int STATE_READY = 1;
     static private final int STATE_DONE = 2;
@@ -46,14 +87,14 @@ public class MainActivity extends AppCompatActivity implements
 
     /* Used to handle permission request */
     private static final int PERMISSIONS_REQUEST_RECORD_AUDIO = 1;
-    String[] s={"What's your name?","My name is Frank.","Nice to meet you Frank.","Nice to meet you too."};
     int sno=0;
 
     private Model model;
     private SpeechService speechService;
-    private TextView resultView,stateView,scoreView,ScoresView;
+    private TextView quizView,resultView,stateView,scoreView,ScoresView,cpt;
     private RatingBar ratingBar;
-    private ImageButton mic,next;
+    private ProgressBar progressBar;
+    private ImageButton mic,next,skip;
     private LinearLayout ScoreBar;
     String[] sent;
 
@@ -65,28 +106,45 @@ public class MainActivity extends AppCompatActivity implements
 
 
         // Setup layout
+        quizView = findViewById(R.id.question_text);
+        quizView.setText(Q[sno].getQuestion());
         resultView = findViewById(R.id.result_text);
-        resultView.setText(s[sno]);
+        resultView.setText("?");
         stateView = findViewById(R.id.state_text);
         ScoresView = findViewById(R.id.scores_text);
+        cpt= findViewById(R.id.cp_text);
         ScoreBar = findViewById(R.id.score_bar);
         scoreView = findViewById(R.id.score_text);
         ratingBar = findViewById(R.id.ratingBar);
+        progressBar = findViewById(R.id.progressBar);
+        progressBar.setMax(100);
         mic=findViewById(R.id.recognize_mic);
         next=findViewById(R.id.next);
+        skip=findViewById(R.id.skip);
         setUiState(STATE_START);
         mic.setOnClickListener(view -> recognizeMicrophone());
         next.setOnClickListener(view -> {
-            if (sno<s.length) {
+            if (sno<Q.length) {
+                isFirst=true;
                 sno++;
-                sent = s[sno].substring(0, s[sno].length() - 1).toLowerCase().split(" ");
+                sent = Q[sno].getAnswer().substring(0, Q[sno].getAnswer().length() - 1).toLowerCase().split(" ");
+                setUiState(STATE_READY);
+            }
+            else
+                Toast.makeText(this, "پایان", Toast.LENGTH_LONG).show();
+        });
+        skip.setOnClickListener(view -> {
+            if (sno<Q.length) {
+                isFirst=true;
+                sno++;
+                sent = Q[sno].getAnswer().substring(0, Q[sno].getAnswer().length() - 1).toLowerCase().split(" ");
                 setUiState(STATE_READY);
             }
             else
                 Toast.makeText(this, "پایان", Toast.LENGTH_LONG).show();
         });
 
-        sent=s[sno].substring(0,s[sno].length()-1).toLowerCase().split(" ");
+        sent=Q[sno].getAnswer().substring(0,Q[sno].getAnswer().length()-1).toLowerCase().split(" ");
         LibVosk.setLogLevel(LogLevel.INFO);
 
         // Check if user has given permission to record audio, init the model after permission is granted
@@ -171,7 +229,7 @@ public class MainActivity extends AppCompatActivity implements
                 ScoresView.append(sentence.get(i).getContent()+": "+(int)sentence.get(i).getScore()+"\n");
                 score += (int) sentence.get(i).getScore();
             }
-            resultView.append(Html.fromHtml("<font color='"+sentence.getLast().getColor()+"'>"+s[sno].charAt(s[sno].length()-1)+" </font>"));
+            resultView.append(Html.fromHtml("<font color='"+sentence.getLast().getColor()+"'>"+Q[sno].getAnswer().charAt(Q[sno].getAnswer().length()-1)+" </font>"));
 
             int sc=0;
             try {
@@ -184,6 +242,7 @@ public class MainActivity extends AppCompatActivity implements
             setUiState(STATE_CORRECT);
             recognizeMicrophone();
         }else{
+            resultView.setText(Q[sno].getAnswer());
             resultView.setTextColor(Color.parseColor("#E10600"));
             for (int i = 0; i < sentence.size(); i++) {
                 ScoresView.append(sentence.get(i).getContent()+":"+(int)sentence.get(i).getScore()+"\n");
@@ -229,6 +288,8 @@ public class MainActivity extends AppCompatActivity implements
         setUiState(STATE_DONE);
     }
 
+
+    @SuppressLint("SetTextI18n")
     private void setUiState(int state) {
         switch (state) {
             case STATE_START:
@@ -236,16 +297,23 @@ public class MainActivity extends AppCompatActivity implements
                 mic.setBackgroundResource(R.drawable.mic_back2);
                 mic.setEnabled(false);
                 next.setVisibility(View.GONE);
+                skip.setVisibility(View.GONE);
                 ScoreBar.setVisibility(View.GONE);
                 ScoresView.setVisibility(View.GONE);
                 break;
             case STATE_READY:
+                double d=(double)(sno)/Q.length;
+                int pb= (int) (d* 100);
                 stateView.setText(R.string.ready);
                 mic.setImageResource(R.drawable.mic_icon);
                 mic.setBackgroundResource(R.drawable.mic_back);
+                progressBar.setProgress(pb);
+                cpt.setText(pb+"%");
                 resultView.setTextColor(Color.BLACK);
-                resultView.setText(s[sno]);
+                resultView.setText("?");
+                quizView.setText(Q[sno].getQuestion());
                 next.setVisibility(View.GONE);
+                skip.setVisibility(View.GONE);
                 ScoreBar.setVisibility(View.GONE);
                 ScoresView.setVisibility(View.GONE);
                 mic.setEnabled(true);
@@ -254,17 +322,20 @@ public class MainActivity extends AppCompatActivity implements
                 mic.setImageResource(R.drawable.mic_icon);
                 mic.setBackgroundResource(R.drawable.mic_back);
                 next.setVisibility(View.GONE);
+                skip.setVisibility(View.GONE);
                 ScoreBar.setVisibility(View.GONE);
                 ScoresView.setVisibility(View.VISIBLE);
                 mic.setEnabled(true);
                 break;
             case STATE_INCORRECT:
+                isFirst=false;
                 mic.setImageResource(R.drawable.ic_baseline_refresh);
                 mic.setBackgroundResource(R.drawable.mic_back);
                 ScoreBar.setVisibility(View.GONE);
                 ScoresView.setVisibility(View.VISIBLE);
                 stateView.setText(getString(R.string.incorrect));
                 next.setVisibility(View.GONE);
+                skip.setVisibility(View.VISIBLE);
                 mic.setEnabled(true);
                 break;
             case STATE_CORRECT:
@@ -274,6 +345,7 @@ public class MainActivity extends AppCompatActivity implements
                 ScoresView.setVisibility(View.VISIBLE);
                 stateView.setText(getString(R.string.correct));
                 next.setVisibility(View.VISIBLE);
+                skip.setVisibility(View.GONE);
                 mic.setEnabled(true);
                 break;
             case STATE_MIC:
@@ -284,6 +356,7 @@ public class MainActivity extends AppCompatActivity implements
                 ScoreBar.setVisibility(View.GONE);
                 ScoresView.setVisibility(View.GONE);
                 next.setVisibility(View.GONE);
+                skip.setVisibility(View.GONE);
                 mic.setEnabled(true);
                 break;
             default:
@@ -303,15 +376,18 @@ public class MainActivity extends AppCompatActivity implements
             speechService.stop();
             speechService = null;
         } else {
-            new CountDownTimer(3000,1000) {
+            new CountDownTimer(2400,800) {
                 @Override
                 public void onTick(long millisUntilFinished) {
-                    resultView.setText(""+(int)((millisUntilFinished/1000)+1));
+                    resultView.setText(""+(int)((millisUntilFinished/800)+1));
                 }
 
                 @Override
                 public void onFinish() {
-                    resultView.setText(s[sno]);
+                    if (isFirst)
+                        resultView.setText("?");
+                    else
+                        resultView.setText(Q[sno].getAnswer());
 
                 }
             }.start();
