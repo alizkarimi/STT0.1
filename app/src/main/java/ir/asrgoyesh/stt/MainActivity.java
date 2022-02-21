@@ -18,6 +18,7 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.RatingBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -45,7 +46,7 @@ public class MainActivity extends AppCompatActivity implements
 
     /* Used to handle permission request */
     private static final int PERMISSIONS_REQUEST_RECORD_AUDIO = 1;
-    String[] s={"What's your name?","My name is Mike.","Nice to meet you Mike.","Nice to meet you too."};
+    String[] s={"What's your name?","My name is Frank.","Nice to meet you Frank.","Nice to meet you too."};
     int sno=0;
 
     private Model model;
@@ -76,12 +77,14 @@ public class MainActivity extends AppCompatActivity implements
         setUiState(STATE_START);
         mic.setOnClickListener(view -> recognizeMicrophone());
         next.setOnClickListener(view -> {
-                if (sno<s.length)
-                    sno++;
-                else
-                    finish();
-            sent=s[sno].substring(0,s[sno].length()-1).toLowerCase().split(" ");
-                setUiState(STATE_READY);});
+            if (sno<s.length) {
+                sno++;
+                sent = s[sno].substring(0, s[sno].length() - 1).toLowerCase().split(" ");
+                setUiState(STATE_READY);
+            }
+            else
+                Toast.makeText(this, "پایان", Toast.LENGTH_LONG).show();
+        });
 
         sent=s[sno].substring(0,s[sno].length()-1).toLowerCase().split(" ");
         LibVosk.setLogLevel(LogLevel.INFO);
