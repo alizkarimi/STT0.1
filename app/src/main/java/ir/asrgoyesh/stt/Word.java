@@ -35,6 +35,10 @@ public class Word {
         return content;
     }
 
+    public String getColor() {
+        return color;
+    }
+
     @Override
     public String toString() {
         String w="<font color='"+color+"'>"+content+" </font>";

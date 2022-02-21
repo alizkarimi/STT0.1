@@ -6,14 +6,18 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.text.Html;
-import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
-import android.widget.Button;
+import android.view.View;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.RatingBar;
 import android.widget.TextView;
-import android.widget.ToggleButton;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -27,6 +31,7 @@ import org.vosk.android.StorageService;
 
 import java.io.IOException;
 import java.util.LinkedList;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity implements
         RecognitionListener {
@@ -35,15 +40,22 @@ public class MainActivity extends AppCompatActivity implements
     static private final int STATE_READY = 1;
     static private final int STATE_DONE = 2;
     static private final int STATE_MIC = 3;
+    static private final int STATE_CORRECT= 4;
+    static private final int STATE_INCORRECT = 5;
 
     /* Used to handle permission request */
     private static final int PERMISSIONS_REQUEST_RECORD_AUDIO = 1;
+    String[] s={"What's your name?","My name is Mike.","Nice to meet you Mike.","Nice to meet you too."};
+    int sno=0;
 
     private Model model;
     private SpeechService speechService;
-    private TextView resultView;
-    private Button mic;
-    private ToggleButton pause;
+    private TextView resultView,stateView,scoreView,ScoresView;
+    private RatingBar ratingBar;
+    private ImageButton mic,next;
+    private LinearLayout ScoreBar;
+    String[] sent;
+
 
     @Override
     public void onCreate(Bundle state) {
@@ -53,12 +65,25 @@ public class MainActivity extends AppCompatActivity implements
 
         // Setup layout
         resultView = findViewById(R.id.result_text);
+        resultView.setText(s[sno]);
+        stateView = findViewById(R.id.state_text);
+        ScoresView = findViewById(R.id.scores_text);
+        ScoreBar = findViewById(R.id.score_bar);
+        scoreView = findViewById(R.id.score_text);
+        ratingBar = findViewById(R.id.ratingBar);
         mic=findViewById(R.id.recognize_mic);
-        pause=(ToggleButton) findViewById(R.id.pause);
+        next=findViewById(R.id.next);
         setUiState(STATE_START);
         mic.setOnClickListener(view -> recognizeMicrophone());
-        pause.setOnCheckedChangeListener((view, isChecked) -> pause(isChecked));
+        next.setOnClickListener(view -> {
+                if (sno<s.length)
+                    sno++;
+                else
+                    finish();
+            sent=s[sno].substring(0,s[sno].length()-1).toLowerCase().split(" ");
+                setUiState(STATE_READY);});
 
+        sent=s[sno].substring(0,s[sno].length()-1).toLowerCase().split(" ");
         LibVosk.setLogLevel(LogLevel.INFO);
 
         // Check if user has given permission to record audio, init the model after permission is granted
@@ -68,6 +93,7 @@ public class MainActivity extends AppCompatActivity implements
         } else {
             initModel();
         }
+
     }
 
     private void initModel() {
@@ -107,24 +133,63 @@ public class MainActivity extends AppCompatActivity implements
     }
 
 
+    @SuppressLint("SetTextI18n")
     @Override
     public void onResult(String hypothesis) {
-        LinkedList<Word> sentense = new LinkedList<>();
+        LinkedList<Word> sentence = new LinkedList<>();
         try {
 
             JSONObject obj = new JSONObject(hypothesis);
             JSONArray jsonArray = obj.getJSONArray("result");
             for (int i=0;i<jsonArray.length();i++) {
-                sentense.add(new Word(jsonArray.getJSONObject(i).getDouble("conf"),jsonArray.getJSONObject(i).getString("word")));
+                sentence.add(new Word(jsonArray.getJSONObject(i).getDouble("conf"),jsonArray.getJSONObject(i).getString("word")));
             }
 
 
         } catch (Throwable t) {
             Log.e("My App", "Could not parse malformed JSON: \"" + hypothesis + "\"");
         }
-        for (int i=0;i<sentense.size();i++)
-        resultView.append(Html.fromHtml(sentense.get(i).toString()));
-        resultView.append("\n");
+        boolean isMatch=true;
+        for (int i=0;i<sentence.size();i++) {
+            if (!(sent.length==sentence.size())) {
+                isMatch = false;
+                break;
+            }else if (!sent[i].equals(sentence.get(i).getContent())){
+                isMatch = false;
+                break;
+            }
+        }
+        int score = 0;
+        ScoresView.setText("\n");
+        if (isMatch) {
+            resultView.setText("");
+            for (int i = 0; i < sentence.size(); i++) {
+                resultView.append(Html.fromHtml(sentence.get(i).toString()));
+                ScoresView.append(sentence.get(i).getContent()+": "+(int)sentence.get(i).getScore()+"\n");
+                score += (int) sentence.get(i).getScore();
+            }
+            resultView.append(Html.fromHtml("<font color='"+sentence.getLast().getColor()+"'>"+s[sno].charAt(s[sno].length()-1)+" </font>"));
+
+            int sc=0;
+            try {
+                sc= score /sentence.size();
+            }catch (ArithmeticException ignored){
+
+            }
+            scoreView.setText("امتیاز:"+sc);
+            ratingBar.setRating((int)(sc/20));
+            setUiState(STATE_CORRECT);
+            recognizeMicrophone();
+        }else{
+            resultView.setTextColor(Color.parseColor("#E10600"));
+            for (int i = 0; i < sentence.size(); i++) {
+                ScoresView.append(sentence.get(i).getContent()+":"+(int)sentence.get(i).getScore()+"\n");
+            }
+            setUiState(STATE_INCORRECT);
+            recognizeMicrophone();
+        }
+
+
         /*try {
             JSONObject songs = new JSONObject(hypothesis);
             resultView.append(songs + "\n");
@@ -136,7 +201,6 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onFinalResult(String hypothesis) {
         //resultView.append(hypothesis + "\n");
-        setUiState(STATE_DONE);
     }
 
     @Override
@@ -165,27 +229,59 @@ public class MainActivity extends AppCompatActivity implements
     private void setUiState(int state) {
         switch (state) {
             case STATE_START:
-                resultView.setText(R.string.preparing);
-                resultView.setMovementMethod(new ScrollingMovementMethod());
+                stateView.setText(R.string.preparing);
+                mic.setBackgroundResource(R.drawable.mic_back2);
                 mic.setEnabled(false);
-                pause.setEnabled((false));
+                next.setVisibility(View.GONE);
+                ScoreBar.setVisibility(View.GONE);
+                ScoresView.setVisibility(View.GONE);
                 break;
             case STATE_READY:
-                resultView.setText(R.string.ready);
-                mic.setText(R.string.recognize_microphone);
+                stateView.setText(R.string.ready);
+                mic.setImageResource(R.drawable.mic_icon);
+                mic.setBackgroundResource(R.drawable.mic_back);
+                resultView.setTextColor(Color.BLACK);
+                resultView.setText(s[sno]);
+                next.setVisibility(View.GONE);
+                ScoreBar.setVisibility(View.GONE);
+                ScoresView.setVisibility(View.GONE);
                 mic.setEnabled(true);
-                pause.setEnabled((false));
                 break;
             case STATE_DONE:
-                mic.setText(R.string.recognize_microphone);
+                mic.setImageResource(R.drawable.mic_icon);
+                mic.setBackgroundResource(R.drawable.mic_back);
+                next.setVisibility(View.GONE);
+                ScoreBar.setVisibility(View.GONE);
+                ScoresView.setVisibility(View.VISIBLE);
                 mic.setEnabled(true);
-                pause.setEnabled((false));
+                break;
+            case STATE_INCORRECT:
+                mic.setImageResource(R.drawable.ic_baseline_refresh);
+                mic.setBackgroundResource(R.drawable.mic_back);
+                ScoreBar.setVisibility(View.GONE);
+                ScoresView.setVisibility(View.VISIBLE);
+                stateView.setText(getString(R.string.incorrect));
+                next.setVisibility(View.GONE);
+                mic.setEnabled(true);
+                break;
+            case STATE_CORRECT:
+                mic.setImageResource(R.drawable.ic_baseline_refresh);
+                mic.setBackgroundResource(R.drawable.mic_back);
+                ScoreBar.setVisibility(View.VISIBLE);
+                ScoresView.setVisibility(View.VISIBLE);
+                stateView.setText(getString(R.string.correct));
+                next.setVisibility(View.VISIBLE);
+                mic.setEnabled(true);
                 break;
             case STATE_MIC:
-                mic.setText(R.string.stop_microphone);
-                resultView.setText(getString(R.string.say_something));
+                mic.setImageResource(R.drawable.ic_baseline_stop_24);
+                resultView.setTextColor(Color.BLACK);
+                mic.setBackgroundResource(R.drawable.mic_back);
+                stateView.setText(getString(R.string.say));
+                ScoreBar.setVisibility(View.GONE);
+                ScoresView.setVisibility(View.GONE);
+                next.setVisibility(View.GONE);
                 mic.setEnabled(true);
-                pause.setEnabled((true));
                 break;
             default:
                 throw new IllegalStateException("Unexpected value: " + state);
@@ -193,33 +289,37 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private void setErrorState(String message) {
-        resultView.setText(message);
-        mic.setText(R.string.recognize_microphone);
+        stateView.setText(message);
+        mic.setImageResource(R.drawable.mic_icon);
         mic.setEnabled(false);
     }
 
-
     private void recognizeMicrophone() {
+
         if (speechService != null) {
-            setUiState(STATE_DONE);
             speechService.stop();
             speechService = null;
         } else {
+            new CountDownTimer(3000,1000) {
+                @Override
+                public void onTick(long millisUntilFinished) {
+                    resultView.setText(""+(int)((millisUntilFinished/1000)+1));
+                }
+
+                @Override
+                public void onFinish() {
+                    resultView.setText(s[sno]);
+
+                }
+            }.start();
             setUiState(STATE_MIC);
             try {
-                Recognizer rec = new Recognizer(model, 24000.0f);
-                speechService = new SpeechService(rec, 24000.0f);
+                Recognizer rec = new Recognizer(model, 44000.0f);
+                speechService = new SpeechService(rec, 44000.0f);
                 speechService.startListening(this);
             } catch (IOException e) {
                 setErrorState(e.getMessage());
             }
-        }
-    }
-
-
-    private void pause(boolean checked) {
-        if (speechService != null) {
-            speechService.setPause(checked);
         }
     }
 
