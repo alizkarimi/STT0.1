@@ -7,7 +7,7 @@
     <string name="failed">شناسایی ناموفق بود %s\n</string>
     <string name="elapsed">نتیجه %s سپری شده %d میلی ثانیه\n</string>
     <string name="starting">درحال شروع</string>
-    <string name="say">متن را تلفظ نمایید</string>
+    <string name="say">معادل انگلیسی عبارت فارسی را تلفظ نمایید</string>
     <string name="correct">درست</string>
     <string name="incorrect">نادرست</string>
     <string name="pause">ایست</string>

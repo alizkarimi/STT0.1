@@ -198,6 +198,7 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onResult(String hypothesis) {
         LinkedList<Word> sentence = new LinkedList<>();
+
         try {
 
             JSONObject obj = new JSONObject(hypothesis);
@@ -210,7 +211,8 @@ public class MainActivity extends AppCompatActivity implements
         } catch (Throwable t) {
             Log.e("My App", "Could not parse malformed JSON: \"" + hypothesis + "\"");
         }
-        boolean isMatch=true;
+
+        boolean isMatch= sentence.size() != 0;
         for (int i=0;i<sentence.size();i++) {
             if (!(sent.length==sentence.size())) {
                 isMatch = false;
@@ -324,7 +326,7 @@ public class MainActivity extends AppCompatActivity implements
                 next.setVisibility(View.GONE);
                 skip.setVisibility(View.GONE);
                 ScoreBar.setVisibility(View.GONE);
-                ScoresView.setVisibility(View.VISIBLE);
+                ScoresView.setVisibility(View.GONE);
                 mic.setEnabled(true);
                 break;
             case STATE_INCORRECT:
@@ -375,6 +377,8 @@ public class MainActivity extends AppCompatActivity implements
         if (speechService != null) {
             speechService.stop();
             speechService = null;
+           // setUiState(STATE_DONE);
+
         } else {
             new CountDownTimer(2400,800) {
                 @Override
