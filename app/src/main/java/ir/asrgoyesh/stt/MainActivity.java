@@ -96,7 +96,7 @@ public class MainActivity extends AppCompatActivity implements
     private ProgressBar progressBar;
     private ImageButton mic,next,skip;
     private LinearLayout ScoreBar;
-    String[] sent;
+    String[] sent,temp;
 
 
     @Override
@@ -127,7 +127,6 @@ public class MainActivity extends AppCompatActivity implements
             if (sno<Q.length) {
                 isFirst=true;
                 sno++;
-                sent = Q[sno].getAnswer().substring(0, Q[sno].getAnswer().length() - 1).toLowerCase().split(" ");
                 setUiState(STATE_READY);
             }
             else
@@ -137,14 +136,12 @@ public class MainActivity extends AppCompatActivity implements
             if (sno<Q.length) {
                 isFirst=true;
                 sno++;
-                sent = Q[sno].getAnswer().substring(0, Q[sno].getAnswer().length() - 1).toLowerCase().split(" ");
                 setUiState(STATE_READY);
             }
             else
                 Toast.makeText(this, "پایان", Toast.LENGTH_LONG).show();
         });
 
-        sent=Q[sno].getAnswer().substring(0,Q[sno].getAnswer().length()-1).toLowerCase().split(" ");
         LibVosk.setLogLevel(LogLevel.INFO);
 
         // Check if user has given permission to record audio, init the model after permission is granted
@@ -214,10 +211,10 @@ public class MainActivity extends AppCompatActivity implements
 
         boolean isMatch= sentence.size() != 0;
         for (int i=0;i<sentence.size();i++) {
-            if (!(sent.length==sentence.size())) {
+            if (!(temp.length==sentence.size())) {
                 isMatch = false;
                 break;
-            }else if (!sent[i].equals(sentence.get(i).getContent())){
+            }else if (!temp[i].equals(sentence.get(i).getContent())){
                 isMatch = false;
                 break;
             }
@@ -227,12 +224,10 @@ public class MainActivity extends AppCompatActivity implements
         if (isMatch) {
             resultView.setText("");
             for (int i = 0; i < sentence.size(); i++) {
-                resultView.append(Html.fromHtml(sentence.get(i).toString()));
+                resultView.append(Html.fromHtml("<font color='"+sentence.get(i).getColor()+"'>"+sent[i]+" </font>"));
                 ScoresView.append(sentence.get(i).getContent()+": "+(int)sentence.get(i).getScore()+"\n");
                 score += (int) sentence.get(i).getScore();
             }
-            resultView.append(Html.fromHtml("<font color='"+sentence.getLast().getColor()+"'>"+Q[sno].getAnswer().charAt(Q[sno].getAnswer().length()-1)+" </font>"));
-
             int sc=0;
             try {
                 sc= score /sentence.size();
@@ -314,6 +309,8 @@ public class MainActivity extends AppCompatActivity implements
                 resultView.setTextColor(Color.BLACK);
                 resultView.setText("?");
                 quizView.setText(Q[sno].getQuestion());
+                sent = Q[sno].getAnswer().split(" ");
+                temp=Q[sno].getAnswer().toLowerCase().replace(".","").replace("!","").replace(",","").replace("?","").split(" ");
                 next.setVisibility(View.GONE);
                 skip.setVisibility(View.GONE);
                 ScoreBar.setVisibility(View.GONE);
