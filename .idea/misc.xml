@@ -3,6 +3,7 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="app/src/main/res/drawable/ctr_back.xml" value="0.1945" />
         <entry key="app/src/main/res/drawable/ic_baseline_stop_24.xml" value="0.1945" />
         <entry key="app/src/main/res/drawable/ic_baseline_undo_24.xml" value="0.1945" />
         <entry key="app/src/main/res/drawable/ic_launcher_foreground.xml" value="0.1945" />
@@ -12,7 +13,7 @@
         <entry key="app/src/main/res/drawable/mic_icon.xml" value="0.1945" />
         <entry key="app/src/main/res/drawable/next_back.xml" value="0.1" />
         <entry key="app/src/main/res/drawable/skip_back.xml" value="0.1945" />
-        <entry key="app/src/main/res/layout/activity_main.xml" value="0.44805194805194803" />
+        <entry key="app/src/main/res/layout/activity_main.xml" value="0.33" />
         <entry key="app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.1945" />
       </map>
     </option>
