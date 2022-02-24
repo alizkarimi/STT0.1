@@ -74,7 +74,7 @@ public class MainActivity extends AppCompatActivity implements
             new Quiz(30,"نوه هات چطورن؟","How are your grand children?",R.raw.fa30,R.raw.en30),
             new Quiz(31,"عموت/داییت چطوره؟","How is your uncle?",R.raw.fa31,R.raw.en31),
             new Quiz(32,"خاله ات/عمه ات چطوره؟","How is your aunt?",R.raw.fa32,R.raw.en32),
-            new Quiz(33,"پسر دایی ات/دختردایی ات/پسر خاله ات چطوره؟"," How  is  your cousin?",R.raw.fa33,R.raw.en33)
+            new Quiz(33,"پسر دایی ات/دختردایی ات/پسر خاله ات چطوره؟"," How is your cousin?",R.raw.fa33,R.raw.en33)
     };
 
     boolean isFirst=true;
